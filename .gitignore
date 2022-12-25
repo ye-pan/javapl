@@ -1,0 +1,8 @@
+target
+bin
+log
+.settings
+.idea
+*.iml
+*.classpath
+*.project
