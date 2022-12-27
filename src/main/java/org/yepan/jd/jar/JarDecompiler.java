@@ -1,5 +1,7 @@
 package org.yepan.jd.jar;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,7 +10,6 @@ import java.util.Objects;
 
 import org.jd.core.v1.ClassFileToJavaSourceDecompiler;
 import org.jd.core.v1.api.loader.Loader;
-import org.jd.core.v1.api.printer.Printer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yepan.jd.JavaFiles;
@@ -48,22 +49,36 @@ public class JarDecompiler {
 				String path = fileEntry.getPath();
 				if (path.endsWith(".class")) {
 					//.class文件，进行反编译处理
-					if (path.contains("$")) {
-						//内部类，匿名类等等，不处理
+					if (path.contains("$") || path.endsWith("module-info.class")) {
+						//内部类，匿名类，module描述文件，不处理
 					} else {
 						String internalName = path.substring(0, path.length() - 6); // 6 = ".class".length()
 						Loader loader = new FileEntryLoader(fileEntry);
 						Path outputPath = JavaFiles.make(output, internalName);
-						Printer printer = new OutFilePrinter(outputPath);
+						try {
+							Files.deleteIfExists(outputPath);
+						} catch (IOException e) {
+							log.error("反编译Java文件，删除已经存在的文件" + outputPath + "异常", e);
+						}
+						OutFilePrinter printer = new OutFilePrinter(outputPath);
+						printer.setUnicodeEscape(false);
 						try {
 				            
 							DECOMPILER.decompile(loader, printer, internalName, configuration);
 						} catch (Exception e) {
-							log.error("处理" + path + "出现异常", e);
+							log.error("处理" + path + "异常", e);
 						}
 					}
 				} else {
-					//TODO 普通文件暂时不处理
+					//TODO 普通文件，直接按照目录层级拷贝
+					/*
+					 * Path outputPath = FileUtil.make(output, path); try {
+					 * Files.deleteIfExists(outputPath); } catch(IOException e) {
+					 * log.error("反编译Java文件，删除已经存在的文件" + outputPath + "异常", e); } try (InputStream
+					 * in = fileEntry.getInputStream()) { Files.copy(in, outputPath); } catch
+					 * (IOException e) { log.error("处理" + path + "异常", e); }
+					 */
+					
 				}
 			}
 		}

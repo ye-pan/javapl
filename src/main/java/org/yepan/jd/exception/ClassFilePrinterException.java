@@ -16,6 +16,11 @@ public class ClassFilePrinterException extends RuntimeException {
 		this.path = path;
 	}
 	
+	public ClassFilePrinterException(Path path, String message) {
+		super(message);
+		this.path = path;
+	}
+	
 	@Override
 	public String getMessage() {
 		return super.getMessage() + ", 输出文件路径：" + path;

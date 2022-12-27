@@ -100,6 +100,9 @@ public class OutFilePrinter implements Printer {
 
 	@Override
 	public void start(int maxLineNumber, int majorVersion, int minorVersion) {
+		if (Files.exists(output)) {
+			throw new ClassFilePrinterException(output, "Java文件已经存在，不再处理");
+		}
 		try {
 			this.out = Files.newOutputStream(output, StandardOpenOption.CREATE_NEW);
 		} catch (IOException e) {

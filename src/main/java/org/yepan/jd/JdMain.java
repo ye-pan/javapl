@@ -2,14 +2,11 @@ package org.yepan.jd;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +31,7 @@ public class JdMain {
 		if (files == null || files.length == 0) {
 			throw new IllegalArgsException("", src, "%s%s对应文件下没有待反编译的jar包");
 		}
-		List<Path> decompilerJars = new ArrayList<>();
+		List<Path> decompilerJars = new ArrayList<>(files.length);
 		for (File jar : files) {
 			if (jar.isFile() && jar.getName().endsWith(".jar")) {
 				final Path jarPath = jar.toPath();
@@ -43,6 +40,7 @@ public class JdMain {
 
 		}
 
+		@SuppressWarnings("preview")
 		ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 		CountDownLatch latch = new CountDownLatch(decompilerJars.size());
 		decompilerJars.forEach((path) -> {
@@ -50,6 +48,8 @@ public class JdMain {
 				try {
 					JarDecompiler jarDecompiler = new JarDecompiler(path, outputPath);
 					jarDecompiler.decompiler();
+				} catch(Exception e) {
+					log.error("", e);
 				} finally {
 					latch.countDown();
 				}
